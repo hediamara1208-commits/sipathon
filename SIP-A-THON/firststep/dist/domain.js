@@ -45,7 +45,7 @@ export function transition(current, actorId, command, input = {}) {
       description: requiredText(input.description, 'Project brief'), category: requiredText(input.category, 'Category', 40),
       skills: [...new Set(skills)], duration: requiredText(input.duration, 'Duration', 40),
       status: 'open', studentId: null, mentorId: null, applications: [],
-      milestones: [{ id: uid('milestone'), title: requiredText(input.milestone, 'First milestone', 100), dueDate: validDate(input.dueDate), submissions: [] }],
+      milestones: [{ id: uid('milestone'), title: requiredText(input.milestone, 'First checkpoint', 100), dueDate: validDate(input.dueDate), submissions: [] }],
       createdAt: timestamp, activity: []
     };
     state.projects.unshift(project);
@@ -68,37 +68,37 @@ export function transition(current, actorId, command, input = {}) {
       project.status = 'matching';
       project.applications.forEach(application => { application.status = application.id === selected.id ? 'accepted' : 'not_selected'; });
     } else if (command === 'assign') {
-      requireRule(isOwner, 'Only the project owner can assign a mentor.');
-      requireRule(project.status === 'matching' && project.studentId && !project.mentorId, 'Select a student before assigning one mentor.');
-      requireRule(person(state, input.mentorId)?.role === 'mentor', 'Choose a mentor.');
+      requireRule(isOwner, 'Only the project owner can assign a supervisor.');
+      requireRule(project.status === 'matching' && project.studentId && !project.mentorId, 'Select a student before assigning one supervisor.');
+      requireRule(person(state, input.mentorId)?.role === 'mentor', 'Choose a supervisor.');
       project.mentorId = input.mentorId;
       project.status = 'active';
     } else if (command === 'addMilestone') {
-      requireRule(isOwner, 'Only the project owner can add milestones.');
-      requireRule(project.milestones.every(milestone => milestone.submissions.length === 0), 'The milestone plan is locked after the first submission.');
-      project.milestones.push({ id: uid('milestone'), title: requiredText(input.title, 'Milestone title', 100), dueDate: validDate(input.dueDate), submissions: [] });
+      requireRule(isOwner, 'Only the project owner can add checkpoints.');
+      requireRule(project.milestones.every(milestone => milestone.submissions.length === 0), 'The checkpoint plan is locked after the first submission.');
+      project.milestones.push({ id: uid('milestone'), title: requiredText(input.title, 'Checkpoint title', 100), dueDate: validDate(input.dueDate), submissions: [] });
     } else {
-      requireRule(project.status === 'active' && project.studentId && project.mentorId, 'The project needs one student and one mentor before work starts.');
+      requireRule(project.status === 'active' && project.studentId && project.mentorId, 'The project needs one student and one supervisor before work starts.');
       const milestone = project.milestones.find(candidate => candidate.id === input.milestoneId);
-      requireRule(milestone, 'Milestone not found.');
+      requireRule(milestone, 'Checkpoint not found.');
       const latest = latestSubmission(milestone);
       const status = milestoneStatus(milestone);
       if (command === 'submit') {
         requireRule(actor.role === 'student' && actor.id === project.studentId, 'Only the selected student can submit work.');
-        requireRule(['not_started', 'changes_requested'].includes(status), 'This milestone is already submitted or approved.');
+        requireRule(['not_started', 'changes_requested'].includes(status), 'This checkpoint is already submitted or approved.');
         const url = safeUrl(input.url);
         requireRule(url, 'Use a complete http:// or https:// deliverable link.');
         milestone.submissions.push({ id: uid('submission'), studentId: actor.id, url, notes: requiredText(input.notes, 'Submission notes'), submittedAt: timestamp, evaluation: null, approval: null });
       } else if (command === 'evaluate') {
-        requireRule(actor.role === 'mentor' && actor.id === project.mentorId, 'Only the assigned mentor can evaluate work.');
+        requireRule(actor.role === 'mentor' && actor.id === project.mentorId, 'Only the assigned supervisor can evaluate work.');
         requireRule(status === 'mentor_review', 'Only a new submission can be evaluated.');
         requireRule(['approved', 'changes_requested'].includes(input.decision), 'Choose an evaluation decision.');
         const rating = Number(input.rating);
         requireRule(Number.isInteger(rating) && rating >= 1 && rating <= 5, 'Choose a score from 1 to 5.');
-        latest.evaluation = { mentorId: actor.id, decision: input.decision, rating, feedback: requiredText(input.feedback, 'Mentor feedback'), createdAt: timestamp };
+        latest.evaluation = { mentorId: actor.id, decision: input.decision, rating, feedback: requiredText(input.feedback, 'Supervisor feedback'), createdAt: timestamp };
       } else if (command === 'approve') {
         requireRule(isOwner, 'Only the project owner can approve work.');
-        requireRule(status === 'client_review', 'Mentor approval is required before client review.');
+        requireRule(status === 'client_review', 'Supervisor approval is required before client review.');
         requireRule(['approved', 'changes_requested'].includes(input.decision), 'Choose an approval decision.');
         latest.approval = { clientId: actor.id, decision: input.decision, feedback: requiredText(input.feedback, 'Client feedback'), createdAt: timestamp };
         if (project.milestones.every(candidate => milestoneStatus(candidate) === 'approved')) {
@@ -118,7 +118,7 @@ export function transition(current, actorId, command, input = {}) {
       }
     }
   }
-  const messages = { post: 'Project published', apply: 'Application submitted', select: 'Student selected', assign: 'Mentor assigned · project started', addMilestone: 'Milestone added', submit: 'Deliverable submitted', evaluate: input.decision === 'approved' ? 'Mentor approved the deliverable' : 'Mentor requested changes', approve: input.decision === 'approved' ? 'Client approved the deliverable' : 'Client requested changes' };
+  const messages = { post: 'Project published', apply: 'Application submitted', select: 'Student selected', assign: 'Supervisor assigned · project started', addMilestone: 'Checkpoint added', submit: 'Deliverable submitted', evaluate: input.decision === 'approved' ? 'Supervisor approved the deliverable' : 'Supervisor requested changes', approve: input.decision === 'approved' ? 'Client approved the deliverable' : 'Client requested changes' };
   project.activity.unshift({ id: uid('event'), actorId: actor.id, message: messages[command], createdAt: timestamp });
   if (project.status === 'completed') project.activity.unshift({ id: uid('event'), actorId: actor.id, message: 'Project completed · experience record issued', createdAt: timestamp });
   return { state, projectId: project.id };

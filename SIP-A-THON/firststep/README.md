@@ -1,6 +1,6 @@
 # SymbioNet MVP
 
-A small functional demo connecting businesses, students, and mentors through real project work. One selected student and one assigned mentor per project; a completed project earns an experience record backed by its approved deliverables.
+A small functional demo connecting businesses, students, and supervisors through real project work. One selected student and one assigned supervisor per project; a completed project earns an experience record backed by its approved deliverables.
 
 ## Run locally
 
@@ -21,13 +21,13 @@ Serve the `dist` directory over HTTP; do not open `index.html` directly because 
 
 Use **Viewing as** in the top-right corner to switch roles. The in-app **How SymbioNet works** page also explains this walkthrough (`#/guide`).
 
-1. **Alex Morgan · business:** Post a project with a brief, skills, duration, and first milestone.
+1. **Alex Morgan · business:** Post a project with a brief, skills, duration, and first checkpoint.
 2. **Maya Chen or Noah Williams · student:** Open that project under Discover projects and apply.
-3. **Alex:** Open My workspace, select exactly one applicant, and assign Sofia or Daniel as mentor. Other applicants are marked not selected. Add any extra milestones before the first submission.
+3. **Alex:** Open My workspace, select exactly one applicant, and assign Sofia or Daniel as supervisor. Other applicants are marked not selected. Add any extra checkpoints before the first submission.
 4. **The selected student:** Open the project and submit a deliverable link with notes.
-5. **The assigned mentor:** Evaluate each deliverable with a 1–5 score and feedback. Approve it or request changes.
-6. **Alex:** Approve mentor-reviewed work or request changes. A revision is a new submission and requires fresh mentor evaluation and client approval.
-7. **The selected student:** Once all milestones are approved, view Experience and export the record as JSON.
+5. **The assigned supervisor:** Evaluate each deliverable with a 1–5 score and feedback. Approve it or request changes.
+6. **Alex:** Approve supervisor-reviewed work or request changes. A revision is a new submission and requires fresh supervisor evaluation and client approval.
+7. **The selected student:** Once all checkpoints are approved, view Experience and export the record as JSON.
 
 All commands enforce the same rules in `dist/domain.js`; hiding a button is not the only workflow check. These are consistency checks inside a demo, not secure authorization.
 
@@ -39,21 +39,21 @@ All names and project scenarios are fictional. Seed data is created through the 
 | --- | --- |
 | Design a more useful resource library | Open for applications |
 | Find our next community of customers | Open, with Noah's application |
-| Make our impact visible | Maya + Daniel, two milestones ready for work |
-| A clearer welcome for new customers | Mentor-approved, waiting for Alex's client approval |
+| Make our impact visible | Maya + Daniel, two checkpoints ready for work |
+| A clearer welcome for new customers | Supervisor-approved, waiting for Alex's client approval |
 | Turn customer feedback into a roadmap | Completed, with Maya's experience record |
 
 **Reset demo** in the footer or guide restores these examples. Seeded deadlines are relative to when the demo is initialized. Reset generates new project and record IDs, so old project links no longer resolve.
 
 ## What is real and what is simulated
 
-- **Functional:** posting, applications, exclusive student selection, manual mentor assignment, milestones, linked deliverables, scored mentor evaluations, client approval, revisions with preserved history, completion, record export, filtering, and browser persistence.
+- **Functional:** posting, applications, exclusive student selection, manual supervisor assignment, checkpoints, linked deliverables, scored supervisor evaluations, client approval, revisions with preserved history, completion, record export, filtering, and browser persistence.
 - **Simulated accounts:** the switcher impersonates fictional users. There is no sign-in, account creation, server authorization, or tenant isolation. Anyone using the demo can choose any role and inspect or alter its browser data.
 - **Browser-only storage:** state is stored under `firststep-demo-v1` in localStorage, with the selected account under `firststep-account-v1`. The original storage key names are retained so the rename preserves existing local demo data. Data is specific to that browser and origin. Different ports or hosts have separate data. There is no database, cross-device collaboration, or dependable concurrent multi-user editing. Other tabs on the same origin refresh when saved state changes.
 - **Linked deliverables:** students provide HTTP(S) links and notes. No files are uploaded or fetched by SymbioNet. Seeded example.com links are placeholders, not real work. A link's existence, permissions, or content is not validated.
-- **Workflow verification only:** the app issues an illustrative record after the mentor and client approve every milestone's latest submission. It includes skills, participants, final evidence, feedback, dates, and mean mentor score. It is not a signed credential, public verification service, identity check, or external certification.
-- **Deliberately omitted:** payments, contracts, email, messaging, automated mentor matching, user management, editing published briefs, and reassignment/cancellation after selection.
-- **Scope is fixed once work is submitted:** milestones can be added before the first submission. Completed projects and their evidence are locked through the app. Feedback is required even for approval to keep the record useful.
+- **Workflow verification only:** the app issues an illustrative record after the supervisor and client approve every checkpoint's latest submission. It includes skills, participants, final evidence, feedback, dates, and mean supervisor score. It is not a signed credential, public verification service, identity check, or external certification.
+- **Deliberately omitted:** payments, contracts, email, messaging, automated supervisor matching, user management, editing published briefs, and reassignment/cancellation after selection.
+- **Scope is fixed once work is submitted:** checkpoints can be added before the first submission. Completed projects and their evidence are locked through the app. Feedback is required even for approval to keep the record useful.
 
 The project is intended as a single-person prototype, not for hosting confidential real project data. A production implementation needs authenticated identities, server-enforced permissions and transitions, durable storage, and a real verification policy.
 
@@ -63,9 +63,9 @@ The project is intended as a single-person prototype, not for hosting confidenti
 node --test
 ```
 
-Tests use Node's built-in runner. They exercise the complete lifecycle, role and assignment restrictions, exclusive selection, revision paths, review ordering, all-milestone completion, snapshot evidence, invalid input, and coherent seed data.
+Tests use Node's built-in runner. They exercise the complete lifecycle, role and assignment restrictions, exclusive selection, revision paths, review ordering, all-checkpoint completion, snapshot evidence, invalid input, and coherent seed data.
 
-Initial validation: 12 tests pass. A browser walkthrough also completed posting, applying, selection, assignment, submission, a mentor change request, revision, mentor approval, client approval, experience issuance, refresh persistence, and JSON export. The exported record contains the final approved revision and both review decisions. The interface was checked at desktop and narrow mobile widths.
+Initial validation: 12 tests pass. A browser walkthrough also completed posting, applying, selection, assignment, submission, a supervisor change request, revision, supervisor approval, client approval, experience issuance, refresh persistence, and JSON export. The exported record contains the final approved revision and both review decisions. The interface was checked at desktop and narrow mobile widths.
 
 ## Structure
 

@@ -57,12 +57,12 @@ test('one student is selected; all other applications close and cannot replace t
   assert.throws(() => demo.apply('student-2'), /closed/);
 });
 
-test('a student must be selected before assigning one valid mentor and starting work', () => {
+test('a student must be selected before assigning one valid supervisor and starting work', () => {
   const demo = scenario(); demo.post();
   assert.throws(() => demo.act('business-1', 'assign', { mentorId: 'mentor-1' }), /Select a student/);
   demo.apply(); demo.select();
-  assert.throws(() => demo.submit(), /one student and one mentor/);
-  assert.throws(() => demo.act('business-1', 'assign', { mentorId: 'student-2' }), /Choose a mentor/);
+  assert.throws(() => demo.submit(), /one student and one supervisor/);
+  assert.throws(() => demo.act('business-1', 'assign', { mentorId: 'student-2' }), /Choose a supervisor/);
   demo.act('business-1', 'assign', { mentorId: 'mentor-1' });
   assert.throws(() => demo.act('business-1', 'assign', { mentorId: 'mentor-2' }), /Select a student/);
   assert.equal(demo.project.mentorId, 'mentor-1');
@@ -77,48 +77,48 @@ test('role and assignment checks reject actions from the wrong account', () => {
   assert.throws(() => demo.act('student-1', 'assign', {}), /project owner/);
   assert.throws(() => demo.act('mentor-1', 'addMilestone', {}), /project owner/);
   demo.submit();
-  assert.throws(() => demo.act('mentor-2', 'evaluate', { decision: 'approved', rating: 5, feedback: 'fine' }), /assigned mentor/);
+  assert.throws(() => demo.act('mentor-2', 'evaluate', { decision: 'approved', rating: 5, feedback: 'fine' }), /assigned supervisor/);
   assert.throws(() => demo.act('student-1', 'approve', { decision: 'approved', feedback: 'fine' }), /project owner/);
   const otherBusiness = structuredClone(demo.state);
   otherBusiness.users.push({ id: 'business-2', role: 'business', name: 'Another owner' });
   assert.throws(() => transition(otherBusiness, 'business-2', 'approve', { projectId: demo.project.id, milestoneId: demo.project.milestones[0].id }), /project owner/);
 });
 
-test('client approval cannot skip mentor review or use a rejected evaluation', () => {
+test('client approval cannot skip supervisor review or use a rejected evaluation', () => {
   const demo = scenario(); demo.staff();
-  assert.throws(() => demo.approve(), /Mentor approval is required/);
+  assert.throws(() => demo.approve(), /Supervisor approval is required/);
   assert.throws(() => demo.evaluate(), /new submission/);
   demo.submit();
-  assert.throws(() => demo.approve(), /Mentor approval is required/);
+  assert.throws(() => demo.approve(), /Supervisor approval is required/);
   assert.throws(() => demo.submit(), /already submitted/);
   demo.evaluate('changes_requested');
-  assert.throws(() => demo.approve(), /Mentor approval is required/);
+  assert.throws(() => demo.approve(), /Supervisor approval is required/);
   assert.equal(demo.state.records.length, 0);
 });
 
-test('mentor-requested revisions preserve history and must pass fresh reviews', () => {
+test('supervisor-requested revisions preserve history and must pass fresh reviews', () => {
   const demo = scenario(); demo.staff(); demo.submit(); demo.evaluate('changes_requested');
   demo.submit({ notes: 'Added the missing interview findings.' });
   assert.equal(demo.project.milestones[0].submissions.length, 2);
   assert.equal(demo.project.milestones[0].submissions[0].evaluation.decision, 'changes_requested');
   assert.equal(demo.project.milestones[0].submissions[1].evaluation, null);
-  assert.throws(() => demo.approve(), /Mentor approval is required/);
+  assert.throws(() => demo.approve(), /Supervisor approval is required/);
   demo.evaluate(); demo.approve();
   assert.equal(demo.state.records[0].evidence[0].notes, 'Added the missing interview findings.');
 });
 
-test('client-requested revisions also return to mentor review', () => {
+test('client-requested revisions also return to supervisor review', () => {
   const demo = scenario(); demo.staff(); demo.submit(); demo.evaluate(); demo.approve('changes_requested');
   assert.equal(milestoneStatus(demo.project.milestones[0]), 'changes_requested');
   demo.submit({ url: 'https://example.com/research-v2' });
   assert.equal(milestoneStatus(demo.project.milestones[0]), 'mentor_review');
-  assert.throws(() => demo.approve(), /Mentor approval is required/);
+  assert.throws(() => demo.approve(), /Supervisor approval is required/);
   demo.evaluate(); demo.approve();
   assert.equal(demo.project.milestones[0].submissions[0].approval.decision, 'changes_requested');
   assert.equal(demo.state.records[0].evidence[0].url, 'https://example.com/research-v2');
 });
 
-test('all milestones must be approved; the plan locks at the first submission', () => {
+test('all checkpoints must be approved; the plan locks at the first submission', () => {
   const demo = scenario(); demo.staff();
   demo.act('business-1', 'addMilestone', { title: 'Handover', dueDate: '2026-11-20' });
   demo.submit();
